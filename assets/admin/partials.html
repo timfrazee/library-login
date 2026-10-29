@@ -1,0 +1,41 @@
+{{define "adminTop"}}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.SiteName}} — Admin</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="admin">
+  <header class="topbar">
+    <strong>{{.SiteName}}</strong>
+    <nav>
+      <a href="/admin/" class="{{if eq .Nav " dashboard"}}active{{end}}">Dashboard</a>
+      <a href="/admin/roster" class="{{if eq .Nav " roster"}}active{{end}}">Roster</a>
+      <a href="/admin/schedule" class="{{if eq .Nav " schedule"}}active{{end}}">Schedule</a>
+      <a href="/admin/reports" class="{{if eq .Nav " reports"}}active{{end}}">Reports</a>
+      <a href="/admin/settings" class="{{if eq .Nav " settings"}}active{{end}}">Settings</a>
+      <form method="post" action="/admin/logout" class="inline logout">
+        <input type="hidden" name="csrf" value="{{.CSRF}}"><button>Log out</button>
+      </form>
+    </nav>
+  </header>
+  <main class="admin-main">
+    {{if .Flash}}<div class="flash flash-in">{{.Flash}}</div>{{end}}
+    {{if .FlashErr}}<div class="flash flash-error">{{.FlashErr}}</div>{{end}}
+    {{end}}
+
+    {{define "adminBottom"}}</main>
+</body>
+
+</html>{{end}}
+
+{{define "kvtable"}}{{if .}}<table class="kv">
+  <tbody>{{range .}}<tr>
+      <td>{{.Key}}</td>
+      <td class="num">{{.Count}}</td>
+    </tr>{{end}}</tbody>
+</table>{{else}}<p class="muted">—</p>{{end}}{{end}}

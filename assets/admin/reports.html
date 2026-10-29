@@ -1,0 +1,58 @@
+{{template "adminTop" .}}
+<h1>Reports</h1>
+
+<form method="get" action="/admin/reports" class="filters">
+  <label>From<input type="date" name="from" value="{{.Data.Filter.From}}"></label>
+  <label>To<input type="date" name="to" value="{{.Data.Filter.To}}"></label>
+  <label>Person ID<input name="person" value="{{.Data.Filter.PersonID}}"></label>
+  <label>Category<input name="category" value="{{.Data.Filter.Category}}"></label>
+  <label>Period<input name="period" value="{{.Data.Filter.Period}}"></label>
+  <button>Filter</button>
+  <a class="btn" href="/admin/reports/export.csv{{if .Data.Query}}?{{.Data.Query}}{{end}}">Export CSV</a>
+</form>
+
+<section class="panel summary">
+  <div class="card"><span class="num">{{.Data.Summary.TotalEvents}}</span><span>events</span></div>
+  <div class="card"><span class="num">{{.Data.Summary.UniquePeople}}</span><span>unique people</span></div>
+</section>
+
+<div class="grid3">
+  <section class="panel">
+    <h3>By day</h3>{{template "kvtable" .Data.Summary.ByDay}}
+  </section>
+  <section class="panel">
+    <h3>By period</h3>{{template "kvtable" .Data.Summary.ByPeriod}}
+  </section>
+  <section class="panel">
+    <h3>By category</h3>{{template "kvtable" .Data.Summary.ByCategory}}
+  </section>
+</div>
+
+<section class="panel">
+  <h2>Events {{if .Data.Capped}}<span class="muted">(latest 500)</span>{{end}}</h2>
+  {{if .Data.Events}}
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Direction</th>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Period</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Data.Events}}<tr>
+        <td>{{.At}}</td>
+        <td>{{.Direction}}</td>
+        <td>{{.PersonID}}</td>
+        <td>{{.Name}}</td>
+        <td>{{.Category}}</td>
+        <td>{{.Period}}</td>
+      </tr>{{end}}
+    </tbody>
+  </table>
+  {{else}}<p class="muted">No events match.</p>{{end}}
+</section>
+{{template "adminBottom" .}}

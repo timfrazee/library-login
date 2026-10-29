@@ -1,0 +1,54 @@
+{{template "adminTop" .}}
+<h1>Schedule</h1>
+
+<section class="panel">
+  <h2>Add a period</h2>
+  <form method="post" action="/admin/schedule/add" class="stack">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <label>Name<input name="name" placeholder="Period 1" required></label>
+    <fieldset class="days">
+      <legend>Weekdays</legend>
+      {{range .Data.Days}}<label class="check"><input type="checkbox" name="weekdays" value="{{.Value}}">
+        {{.Label}}</label>{{end}}
+    </fieldset>
+    <div class="times">
+      <label>Start<input type="time" name="start" required></label>
+      <label>End<input type="time" name="end" required></label>
+    </div>
+    <button>Add period</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Periods</h2>
+  {{if .Data.Periods}}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Days</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Data.Periods}}
+      <tr>
+        <td>{{.Name}}</td>
+        <td>{{.DayLabel}}</td>
+        <td>{{.Start}}</td>
+        <td>{{.End}}</td>
+        <td>
+          <form method="post" action="/admin/schedule/delete" class="inline">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><button
+              class="danger">Remove</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{else}}<p class="muted">No periods defined. Scans will record with no period.</p>{{end}}
+</section>
+{{template "adminBottom" .}}

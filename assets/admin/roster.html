@@ -1,0 +1,75 @@
+{{template "adminTop" .}}
+<h1>Roster</h1>
+
+<section class="panel">
+  <h2>Add a person</h2>
+  <form method="post" action="/admin/roster/save" class="row-form">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <input name="id" placeholder="ID" required>
+    <input name="name" placeholder="Name" required>
+    <input name="category" placeholder="Category">
+    <button>Add</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Import CSV</h2>
+  <p class="muted">Columns: <code>id, name, category</code> (an optional header row is detected). Existing IDs are
+    updated.</p>
+  <form method="post" action="/admin/roster/upload" enctype="multipart/form-data" class="row-form">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <input type="file" name="file" accept=".csv,text/csv" required>
+    <label class="check"><input type="checkbox" name="deactivate_missing"> Deactivate people not in this file</label>
+    <button>Upload</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>People ({{len .Data.People}})</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Data.People}}
+      <tr class="{{if not .Active}}inactive{{end}}">
+        <td>{{.ID}}
+          <form id="e-{{.ID}}" method="post" action="/admin/roster/save">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
+          </form>
+        </td>
+        <td><input form="e-{{.ID}}" name="name" value="{{.Name}}"></td>
+        <td><input form="e-{{.ID}}" name="category" value="{{.Category}}"></td>
+        <td>{{if .Active}}Active{{else}}Inactive{{end}}</td>
+        <td class="actions">
+          <button form="e-{{.ID}}">Save</button>
+          {{if .Active}}
+          <form method="post" action="/admin/roster/delete" class="inline">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id"
+              value="{{.ID}}"><button>Deactivate</button>
+          </form>
+          {{else}}
+          <form method="post" action="/admin/roster/save" class="inline">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
+            <input type="hidden" name="name" value="{{.Name}}"><input type="hidden" name="category"
+              value="{{.Category}}"><button>Reactivate</button>
+          </form>
+          {{end}}
+          <form method="post" action="/admin/roster/purge" class="inline"
+            onsubmit="return confirm('Permanently delete {{.Name}} and all their events? This cannot be undone.')">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><button
+              class="danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</section>
+{{template "adminBottom" .}}

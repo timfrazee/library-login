@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.SiteName}} — Setup</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="admin center">
+  <main class="card-form">
+    <h1>Set up admin access</h1>
+    <p class="muted">Create a password to protect the admin area. You'll use it to manage the roster, schedule, and
+      reports.</p>
+    {{if .FlashErr}}<div class="flash flash-error">{{.FlashErr}}</div>{{end}}
+    <form method="post" action="/admin/setup" class="stack">
+      <label>Admin password<input type="password" name="password" required minlength="8" autofocus></label>
+      <label>Confirm password<input type="password" name="confirm" required minlength="8"></label>
+      <button type="submit">Create &amp; continue</button>
+    </form>
+  </main>
+</body>
+
+</html>

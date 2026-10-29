@@ -1,0 +1,31 @@
+{{template "adminTop" .}}
+<h1>Dashboard</h1>
+<p class="muted">{{.Data.Date}}</p>
+
+<section class="panel summary">
+  <div class="card"><span class="num">{{.Data.InCount}}</span><span>currently in</span></div>
+  <div class="card"><span class="num">{{.Data.TodayScans}}</span><span>scans today</span></div>
+</section>
+
+<section class="panel">
+  <h2>Currently in</h2>
+  {{if .Data.Occupants}}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Since</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Data.Occupants}}<tr>
+        <td>{{.Name}}</td>
+        <td>{{.Category}}</td>
+        <td>{{.Since}}</td>
+      </tr>{{end}}
+    </tbody>
+  </table>
+  {{else}}<p class="muted">No one is currently logged in.</p>{{end}}
+</section>
+{{template "adminBottom" .}}

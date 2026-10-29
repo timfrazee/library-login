@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Heading}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="kiosk">
+  <main>
+    {{if .HasLogo}}<img class="logo" src="/logo" alt="">{{end}}
+    <h1>{{.Heading}}</h1>
+    {{if .Instructions}}<p class="instructions">{{.Instructions}}</p>{{end}}
+    {{if .Message}}<div class="flash flash-{{.Status}}">{{.Message}}</div>{{end}}
+    <form method="post" action="/submit" autocomplete="off">
+      <label for="id">Enter your ID</label>
+      <input id="id" name="id" type="text" autofocus required>
+      <button type="submit">Log in / out</button>
+    </form>
+  </main>
+  <script>
+    const input = document.getElementById('id');
+    input.focus();
+    const flash = document.querySelector('.flash');
+    if (flash) {
+      setTimeout(() => {
+        history.replaceState(null, '', '/'); // drop the query so a refresh doesn't replay it
+        flash.remove();
+        input.focus();
+      }, 4000);
+    }
+  </script>
+</body>
+
+</html>

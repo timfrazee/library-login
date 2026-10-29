@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.SiteName}} — Admin login</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="admin center">
+  <main class="card-form">
+    <h1>Admin login</h1>
+    {{if .FlashErr}}<div class="flash flash-error">{{.FlashErr}}</div>{{end}}
+    <form method="post" action="/admin/login" class="stack">
+      <label>Password<input type="password" name="password" required autofocus></label>
+      <button type="submit">Log in</button>
+    </form>
+    <p class="muted"><a href="/">← Back to kiosk</a></p>
+  </main>
+</body>
+
+</html>
