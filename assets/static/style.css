@@ -368,3 +368,10 @@ code {
   padding: 0.1rem 0.35rem;
   border-radius: 0.35rem;
 }
+
+.appfoot {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 1.5rem 0 2rem;
+}

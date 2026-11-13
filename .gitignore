@@ -1,7 +1,21 @@
-.DS_STORE
+.DS_Store
 
 *.db*
 
 logo.*
 
 .claude/
+
+# Built binary and distribution artifacts
+/library-login
+/library-login.exe
+/dist/
+
+# Local environment overrides
+.env
+
+pid*
+
+# Go coverage output
+*.out
+coverage.*

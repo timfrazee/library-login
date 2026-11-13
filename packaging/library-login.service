@@ -1,0 +1,22 @@
+# Sample systemd unit for running Library Login as an always-on LAN server
+# (e.g. a Raspberry Pi appliance that Chromebooks browse to).
+#
+#   sudo cp library-login.service /etc/systemd/system/
+#   sudo systemctl enable --now library-login
+#   journalctl -u library-login     # shows the "On your network" URL to use
+#
+# Data is stored under /var/lib/library-login (created automatically).
+
+[Unit]
+Description=Library Login kiosk server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/library-login -lan -open=false -install-launcher=false -data /var/lib/library-login
+Restart=on-failure
+DynamicUser=yes
+StateDirectory=library-login
+
+[Install]
+WantedBy=multi-user.target

@@ -9,11 +9,36 @@ import (
 // data hangs off Data.
 type adminView struct {
 	SiteName string
-	Nav      string
+	NavItems []navItem
+	Version  string
 	CSRF     string
 	Flash    string
 	FlashErr string
 	Data     any
+}
+
+type navItem struct {
+	Href   string
+	Label  string
+	Active bool
+}
+
+var adminNav = []struct{ Key, Href, Label string }{
+	{"dashboard", "/admin/", "Dashboard"},
+	{"roster", "/admin/roster", "Roster"},
+	{"schedule", "/admin/schedule", "Schedule"},
+	{"reports", "/admin/reports", "Reports"},
+	{"settings", "/admin/settings", "Settings"},
+}
+
+// navItems marks the active entry in Go so templates need no quoted comparison
+// inside an attribute — a construct HTML formatters corrupt.
+func navItems(active string) []navItem {
+	out := make([]navItem, len(adminNav))
+	for i, n := range adminNav {
+		out[i] = navItem{n.Href, n.Label, n.Key == active}
+	}
+	return out
 }
 
 func (a *app) registerAdmin(mux *http.ServeMux) {
@@ -56,7 +81,8 @@ func (a *app) adminBase(r *http.Request, nav string) adminView {
 	nonce, _ := a.authSession(r)
 	return adminView{
 		SiteName: a.siteName(),
-		Nav:      nav,
+		NavItems: navItems(nav),
+		Version:  version,
 		CSRF:     a.csrfToken(nonce),
 		Flash:    r.URL.Query().Get("flash"),
 		FlashErr: r.URL.Query().Get("err"),

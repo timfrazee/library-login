@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Library Login
+Comment=Entry/exit logging kiosk
+Exec=/usr/bin/library-login -install-launcher=false
+Terminal=true
+Categories=Utility;

@@ -13,11 +13,7 @@
   <header class="topbar">
     <strong>{{.SiteName}}</strong>
     <nav>
-      <a href="/admin/" class="{{if eq .Nav " dashboard"}}active{{end}}">Dashboard</a>
-      <a href="/admin/roster" class="{{if eq .Nav " roster"}}active{{end}}">Roster</a>
-      <a href="/admin/schedule" class="{{if eq .Nav " schedule"}}active{{end}}">Schedule</a>
-      <a href="/admin/reports" class="{{if eq .Nav " reports"}}active{{end}}">Reports</a>
-      <a href="/admin/settings" class="{{if eq .Nav " settings"}}active{{end}}">Settings</a>
+      {{range .NavItems}}<a href="{{.Href}}" class="{{if .Active}}active{{end}}">{{.Label}}</a>{{end}}
       <form method="post" action="/admin/logout" class="inline logout">
         <input type="hidden" name="csrf" value="{{.CSRF}}"><button>Log out</button>
       </form>
@@ -29,6 +25,7 @@
     {{end}}
 
     {{define "adminBottom"}}</main>
+  <footer class="appfoot">Library Login {{.Version}}</footer>
 </body>
 
 </html>{{end}}
