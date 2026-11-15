@@ -11,9 +11,12 @@ import (
 type kioskView struct {
 	Heading      string
 	Instructions string
+	InputLabel   string
 	HasLogo      bool
 	Message      string
 	Status       string
+	ThemeMode    string
+	ThemeColor   string
 }
 
 func (a *app) handleKiosk(w http.ResponseWriter, r *http.Request) {
@@ -21,9 +24,12 @@ func (a *app) handleKiosk(w http.ResponseWriter, r *http.Request) {
 	view := kioskView{
 		Heading:      a.kioskHeading(),
 		Instructions: a.kioskInstructions(),
+		InputLabel:   a.kioskInputLabel(),
 		HasLogo:      hasLogo,
 		Message:      r.URL.Query().Get("msg"),
 		Status:       r.URL.Query().Get("status"),
+		ThemeMode:    themeModeAttr(a.themeMode()),
+		ThemeColor:   a.themeColor(),
 	}
 	if err := a.tpl.ExecuteTemplate(w, "kiosk.html", view); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -32,6 +38,7 @@ func (a *app) handleKiosk(w http.ResponseWriter, r *http.Request) {
 
 func (a *app) kioskHeading() string      { return configOr(a.db, cfgKioskHeading, a.siteName()) }
 func (a *app) kioskInstructions() string { return configOr(a.db, cfgKioskInstructions, "") }
+func (a *app) kioskInputLabel() string   { return configOr(a.db, cfgKioskInputLabel, "Enter your ID") }
 
 var logoNames = []string{"logo.png", "logo.svg", "logo.jpg", "logo.jpeg", "logo.gif", "logo.webp"}
 

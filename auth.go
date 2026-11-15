@@ -165,7 +165,12 @@ func (a *app) handleSetupForm(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 		return
 	}
-	a.render(w, "setup.html", adminView{SiteName: a.siteName(), FlashErr: r.URL.Query().Get("err")})
+	a.render(w, "setup.html", adminView{
+		SiteName:   a.siteName(),
+		FlashErr:   r.URL.Query().Get("err"),
+		ThemeMode:  themeModeAttr(a.themeMode()),
+		ThemeColor: a.themeColor(),
+	})
 }
 
 func (a *app) handleSetupSubmit(w http.ResponseWriter, r *http.Request) {
@@ -195,7 +200,12 @@ func (a *app) handleLoginForm(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 		return
 	}
-	a.render(w, "login.html", adminView{SiteName: a.siteName(), FlashErr: r.URL.Query().Get("err")})
+	a.render(w, "login.html", adminView{
+		SiteName:   a.siteName(),
+		FlashErr:   r.URL.Query().Get("err"),
+		ThemeMode:  themeModeAttr(a.themeMode()),
+		ThemeColor: a.themeColor(),
+	})
 }
 
 func (a *app) handleLoginSubmit(w http.ResponseWriter, r *http.Request) {

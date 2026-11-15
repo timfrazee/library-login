@@ -9,6 +9,7 @@ import (
 )
 
 type occupant struct {
+	Id       string
 	Name     string
 	Category string
 	Since    string
@@ -25,7 +26,7 @@ func dayBoundsUTC(loc *time.Location, ref time.Time) (string, string) {
 
 func (a *app) currentlyIn(loc *time.Location) ([]occupant, error) {
 	rows, err := a.db.Query(`
-SELECT p.name, COALESCE(p.category,''), e.at FROM events e
+SELECT p.id, p.name, COALESCE(p.category,''), e.at FROM events e
 JOIN (SELECT person_id, MAX(id) AS mid FROM events GROUP BY person_id) last ON e.id = last.mid
 JOIN people p ON p.id = e.person_id
 WHERE e.direction = 'in'
@@ -38,7 +39,7 @@ ORDER BY p.name`)
 	for rows.Next() {
 		var o occupant
 		var atStr string
-		if err := rows.Scan(&o.Name, &o.Category, &atStr); err != nil {
+		if err := rows.Scan(&o.Id, &o.Name, &o.Category, &atStr); err != nil {
 			return nil, err
 		}
 		if t, err := time.Parse(time.RFC3339, atStr); err == nil {

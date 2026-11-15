@@ -14,19 +14,37 @@
 
 <section class="panel">
   <h2>Import CSV</h2>
-  <p class="muted">Columns: <code>id, name, category</code> (an optional header row is detected). Existing IDs are
-    updated.</p>
-  <form method="post" action="/admin/roster/upload" enctype="multipart/form-data" class="row-form">
+  <p class="muted">
+    Upload a CSV file with columns: <code>id</code>, <code>name</code>, and (optionall) <code>category</code>.
+  </p>
+  <p class="muted">
+    A row with an ID matching one already in the system will have its name and category updated, but its history will be preserved based on ID.
+  </p>
+  <form method="post" action="/admin/roster/upload" enctype="multipart/form-data" class="stack">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
     <input type="file" name="file" accept=".csv,text/csv" required>
-    <label class="check"><input type="checkbox" name="deactivate_missing"> Deactivate people not in this file</label>
+    <label class="check"><input type="checkbox" name="deactivate_missing"> Deactivate any existing users who are <b>not</b> in the uploaded file</label>
     <button>Upload</button>
   </form>
 </section>
 
 <section class="panel">
-  <h2>People ({{len .Data.People}})</h2>
-  <table>
+  <h2>People ({{.Data.Total}})</h2>
+
+  <form method="get" action="/admin/roster#roster" class="roster-tools">
+    <div>
+      <input type="search" name="q" value="{{.Data.Query}}" placeholder="Search name, ID, or category">
+      <button>Search</button>
+      {{if .Data.Query}}<a class="btn btn-sub" href="/admin/roster">Clear</a>{{end}}
+    </div>
+    <label class="check">
+      <input type="checkbox" name="include_inactive" value="1" {{if.Data.IncludeInactive}}checked{{end}}>
+      Include deactivated people
+    </label>
+  </form>
+
+  {{if .Data.People}}
+  <table id="roster" data-csrf="{{.CSRF}}" data-include-inactive="{{if .Data.IncludeInactive}}1{{end}}">
     <thead>
       <tr>
         <th>ID</th>
@@ -38,38 +56,54 @@
     </thead>
     <tbody>
       {{range .Data.People}}
-      <tr class="{{if not .Active}}inactive{{end}}">
-        <td>{{.ID}}
-          <form id="e-{{.ID}}" method="post" action="/admin/roster/save">
-            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
-          </form>
+      <tr data-id="{{.ID}}" class="{{if not .Active}}inactive{{end}}">
+        <td>{{.ID}}</td>
+        <td>
+          <span class="view-name">{{.Name}}</span>
+          <input class="edit edit-name" value="{{.Name}}" aria-label="Name">
         </td>
-        <td><input form="e-{{.ID}}" name="name" value="{{.Name}}"></td>
-        <td><input form="e-{{.ID}}" name="category" value="{{.Category}}"></td>
-        <td>{{if .Active}}Active{{else}}Inactive{{end}}</td>
-        <td class="actions">
-          <button form="e-{{.ID}}">Save</button>
-          {{if .Active}}
-          <form method="post" action="/admin/roster/delete" class="inline">
-            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id"
-              value="{{.ID}}"><button>Deactivate</button>
-          </form>
-          {{else}}
-          <form method="post" action="/admin/roster/save" class="inline">
-            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
-            <input type="hidden" name="name" value="{{.Name}}"><input type="hidden" name="category"
-              value="{{.Category}}"><button>Reactivate</button>
-          </form>
-          {{end}}
-          <form method="post" action="/admin/roster/purge" class="inline"
-            onsubmit="return confirm('Permanently delete {{.Name}} and all their events? This cannot be undone.')">
-            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><button
-              class="danger">Delete</button>
-          </form>
+        <td>
+          <span class="view-category">{{.Category}}</span>
+          <input class="edit edit-category" value="{{.Category}}" aria-label="Category">
+        </td>
+        <td><span class="view-status">{{if .Active}}Active{{else}}Inactive{{end}}</span></td>
+        <td>
+          <div class="actions">
+            <button type="button" class="act-edit btn-sub btn-icon" title="Edit" aria-label="Edit">&#9998;</button>
+            <div class="edit-actions">
+              <button type="button" class="act-save btn-icon" title="Save" aria-label="Save">&#10003;</button>
+              <div class="action-group action-group-danger">
+                <button type="button" class="act-deactivate btn-sub btn-icon {{if not .Active}}hidden{{end}}"
+                  title="Deactivate" aria-label="Deactivate">&#8856;</button>
+                <button type="button" class="act-reactivate btn-sub btn-icon {{if .Active}}hidden{{end}}"
+                  title="Reactivate" aria-label="Reactivate">&#8634;</button>
+                <button type="button" class="act-delete danger btn-icon" title="Delete"
+                  aria-label="Delete">&#10005;</button>
+              </div>
+            </div>
+            <span class="row-msg" role="status"></span>
+          </div>
         </td>
       </tr>
       {{end}}
     </tbody>
   </table>
+
+  {{if gt .Data.PageCount 1}}
+  <div class="pagination">
+    {{if .Data.HasPrev}}<a class="btn btn-sub"
+      href="/admin/roster?q={{.Data.Query}}&page={{.Data.PrevPage}}{{if .Data.IncludeInactive}}&include_inactive=1{{end}}">←
+      Prev</a>{{end}}
+    <span class="muted">Page {{.Data.Page}} of {{.Data.PageCount}}</span>
+    {{if .Data.HasNext}}<a class="btn btn-sub"
+      href="/admin/roster?q={{.Data.Query}}&page={{.Data.NextPage}}{{if .Data.IncludeInactive}}&include_inactive=1{{end}}">Next
+      →</a>{{end}}
+  </div>
+  {{end}}
+  {{else}}
+  <p class="muted">{{if .Data.Query}}No people match "{{.Data.Query}}".{{else}}No people to show.{{end}}</p>
+  {{end}}
 </section>
+
+<script src="/static/roster.js" defer></script>
 {{template "adminBottom" .}}

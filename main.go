@@ -36,6 +36,9 @@ const (
 	cfgAutoCheckoutTime    = "auto_checkout_time"
 	cfgKioskHeading        = "kiosk_heading"
 	cfgKioskInstructions   = "kiosk_instructions"
+	cfgKioskInputLabel     = "kiosk_input_label"
+	cfgThemeMode           = "theme_mode"
+	cfgThemeColor          = "theme_color"
 )
 
 type app struct {

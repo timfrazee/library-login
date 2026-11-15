@@ -26,8 +26,12 @@ type settingsData struct {
 	CommonTimezones   []string
 	KioskHeading      string
 	KioskInstructions string
+	KioskInputLabel   string
 	DataDir           string
 	LogoFile          string
+	ThemeMode         string
+	ThemeColor        string
+	Accents           []accent
 }
 
 func (a *app) handleSettings(w http.ResponseWriter, r *http.Request) {
@@ -45,20 +49,26 @@ func (a *app) handleSettings(w http.ResponseWriter, r *http.Request) {
 		CommonTimezones:   commonTimezones,
 		KioskHeading:      configOr(a.db, cfgKioskHeading, ""),
 		KioskInstructions: configOr(a.db, cfgKioskInstructions, ""),
+		KioskInputLabel:   configOr(a.db, cfgKioskInputLabel, "Enter your ID"),
 		DataDir:           a.dataDir,
 		LogoFile:          logoFile,
+		ThemeMode:         a.themeMode(),
+		ThemeColor:        a.themeColor(),
+		Accents:           accents,
 	}
 	a.render(w, "settings.html", v)
 }
 
-func (a *app) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
+func (a *app) handleGeneralSettingsSave(w http.ResponseWriter, r *http.Request) {
 	if !a.checkCSRF(r) {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
+
 	if name := strings.TrimSpace(r.FormValue("site_name")); name != "" {
 		_ = setConfig(a.db, cfgSiteName, name)
 	}
+
 	if tz := strings.TrimSpace(r.FormValue("timezone")); tz != "" {
 		if _, err := time.LoadLocation(tz); err != nil {
 			http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("Unknown timezone: "+tz), http.StatusSeeOther)
@@ -66,18 +76,62 @@ func (a *app) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 		}
 		_ = setConfig(a.db, cfgTimezone, tz)
 	}
+
+	http.Redirect(w, r, "/admin/settings?flash=Settings+saved", http.StatusSeeOther)
+}
+
+func (a *app) handleAppearanceSave(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxLogoBytes+4096)
+	if err := r.ParseMultipartForm(maxLogoBytes); err != nil {
+		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("File too large (max 2 MB)"), http.StatusSeeOther)
+		return
+	}
+	if !a.checkCSRF(r) {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	if m := r.FormValue("theme_mode"); themeModes[m] {
+		_ = setConfig(a.db, cfgThemeMode, m)
+	}
+	if c := r.FormValue("theme_color"); validAccent(c) {
+		_ = setConfig(a.db, cfgThemeColor, c)
+	}
+
+	_ = setConfig(a.db, cfgKioskHeading, strings.TrimSpace(r.FormValue("kiosk_heading")))
+
+	instructions := strings.ReplaceAll(r.FormValue("kiosk_instructions"), "\r\n", "\n")
+	_ = setConfig(a.db, cfgKioskInstructions, strings.TrimSpace(instructions))
+
+	_ = setConfig(a.db, cfgKioskInputLabel, strings.TrimSpace(r.FormValue("kiosk_input_label")))
+
+	if r.FormValue("delete_logo") == "on" {
+		a.deleteLogo()
+	} else if logoErr := a.saveLogo(r); logoErr != "" {
+		http.Redirect(w, r, "/admin/settings?err="+logoErr, http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(w, r, "/admin/settings?flash=Appearance+saved", http.StatusSeeOther)
+}
+
+func (a *app) handleBehaviorSave(w http.ResponseWriter, r *http.Request) {
+	if !a.checkCSRF(r) {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
 	if n, err := strconv.Atoi(strings.TrimSpace(r.FormValue("debounce"))); err == nil && n >= 0 {
 		_ = setConfig(a.db, cfgDebounce, strconv.Itoa(n))
 	}
+
 	enabled := r.FormValue("auto_checkout") == "on"
 	_ = setConfig(a.db, cfgAutoCheckoutEnabled, boolConfig(enabled))
+
 	if at := strings.TrimSpace(r.FormValue("auto_checkout_at")); validClock(at) {
 		_ = setConfig(a.db, cfgAutoCheckoutTime, at)
 	}
-	_ = setConfig(a.db, cfgKioskHeading, strings.TrimSpace(r.FormValue("kiosk_heading")))
-	instructions := strings.ReplaceAll(r.FormValue("kiosk_instructions"), "\r\n", "\n")
-	_ = setConfig(a.db, cfgKioskInstructions, strings.TrimSpace(instructions))
-	http.Redirect(w, r, "/admin/settings?flash=Settings+saved", http.StatusSeeOther)
+
+	http.Redirect(w, r, "/admin/settings?flash=Behavior+saved", http.StatusSeeOther)
 }
 
 func (a *app) handlePasswordChange(w http.ResponseWriter, r *http.Request) {
@@ -100,57 +154,40 @@ func (a *app) handlePasswordChange(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin/settings?flash=Password+changed", http.StatusSeeOther)
 }
 
-// handleLogoUpload saves an uploaded image into the data dir as logo.<ext>,
-// replacing any existing logo so there is never more than one.
-func (a *app) handleLogoUpload(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxLogoBytes+4096)
-	if err := r.ParseMultipartForm(maxLogoBytes); err != nil {
-		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("File too large (max 2 MB)"), http.StatusSeeOther)
-		return
-	}
-	if !a.checkCSRF(r) {
-		http.Error(w, "invalid request", http.StatusBadRequest)
-		return
-	}
+// saveLogo stores an uploaded image as logo.<ext> in the data dir, replacing any
+// existing logo. It assumes the multipart form is already parsed; a missing file
+// is not an error, so the caller can save other fields without an upload. It
+// returns a URL-escaped message on a real failure, or "" on success or no upload.
+func (a *app) saveLogo(r *http.Request) string {
 	file, header, err := r.FormFile("logo")
 	if err != nil {
-		http.Redirect(w, r, "/admin/settings?err=No+file+selected", http.StatusSeeOther)
-		return
+		return ""
 	}
 	defer file.Close()
+
 	ext := strings.ToLower(filepath.Ext(header.Filename))
 	if !allowedLogoExt[ext] {
-		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("Unsupported file type"), http.StatusSeeOther)
-		return
+		return url.QueryEscape("Unsupported file type")
 	}
+
 	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("Could not read file"), http.StatusSeeOther)
-		return
+		return url.QueryEscape("Could not read file")
 	}
+
 	// SVG is text and never sniffs as image/*; raster formats must.
 	if ext != ".svg" && !strings.HasPrefix(http.DetectContentType(data), "image/") {
-		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("That file is not an image"), http.StatusSeeOther)
-		return
+		return url.QueryEscape("That file is not an image")
 	}
-	a.removeLogo()
+
+	a.deleteLogo()
 	if err := os.WriteFile(filepath.Join(a.dataDir, "logo"+ext), data, 0o644); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return url.QueryEscape("Internal server error")
 	}
-	http.Redirect(w, r, "/admin/settings?flash=Logo+uploaded", http.StatusSeeOther)
+	return ""
 }
 
-func (a *app) handleLogoDelete(w http.ResponseWriter, r *http.Request) {
-	if !a.checkCSRF(r) {
-		http.Error(w, "invalid request", http.StatusBadRequest)
-		return
-	}
-	a.removeLogo()
-	http.Redirect(w, r, "/admin/settings?flash=Logo+removed", http.StatusSeeOther)
-}
-
-func (a *app) removeLogo() {
+func (a *app) deleteLogo() {
 	for _, n := range logoNames {
 		_ = os.Remove(filepath.Join(a.dataDir, n))
 	}

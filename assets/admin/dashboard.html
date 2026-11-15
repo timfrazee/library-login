@@ -3,8 +3,14 @@
 <p class="muted">{{.Data.Date}}</p>
 
 <section class="panel summary">
-  <div class="card"><span class="num">{{.Data.InCount}}</span><span>currently in</span></div>
-  <div class="card"><span class="num">{{.Data.TodayScans}}</span><span>scans today</span></div>
+  <div class="card">
+    <span class="num">{{.Data.InCount}}</span>
+    <span>currently in</span>
+  </div>
+  <div class="card">
+    <span class="num">{{.Data.TodayScans}}</span>
+    <span>scans today</span>
+  </div>
 </section>
 
 <section class="panel">
@@ -13,6 +19,7 @@
   <table>
     <thead>
       <tr>
+        <th>ID</th>
         <th>Name</th>
         <th>Category</th>
         <th>Since</th>
@@ -20,6 +27,7 @@
     </thead>
     <tbody>
       {{range .Data.Occupants}}<tr>
+        <td>{{.Id}}</td>
         <td>{{.Name}}</td>
         <td>{{.Category}}</td>
         <td>{{.Since}}</td>

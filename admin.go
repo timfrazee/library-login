@@ -8,13 +8,15 @@ import (
 // adminView is the common template context for every admin page. Page-specific
 // data hangs off Data.
 type adminView struct {
-	SiteName string
-	NavItems []navItem
-	Version  string
-	CSRF     string
-	Flash    string
-	FlashErr string
-	Data     any
+	SiteName   string
+	NavItems   []navItem
+	Version    string
+	CSRF       string
+	Flash      string
+	FlashErr   string
+	ThemeMode  string
+	ThemeColor string
+	Data       any
 }
 
 type navItem struct {
@@ -52,7 +54,9 @@ func (a *app) registerAdmin(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /admin/roster", a.requireAuth(a.handleRoster))
 	mux.HandleFunc("POST /admin/roster/save", a.requireAuth(a.handleRosterSave))
-	mux.HandleFunc("POST /admin/roster/delete", a.requireAuth(a.handleRosterDelete))
+	mux.HandleFunc("POST /admin/roster/update", a.requireAuth(a.handleRosterUpdate))
+	mux.HandleFunc("POST /admin/roster/deactivate", a.requireAuth(a.handleRosterDeactivate))
+	mux.HandleFunc("POST /admin/roster/reactivate", a.requireAuth(a.handleRosterReactivate))
 	mux.HandleFunc("POST /admin/roster/purge", a.requireAuth(a.handleRosterPurge))
 	mux.HandleFunc("POST /admin/roster/upload", a.requireAuth(a.handleRosterUpload))
 
@@ -64,10 +68,10 @@ func (a *app) registerAdmin(mux *http.ServeMux) {
 	mux.HandleFunc("GET /admin/reports/export.csv", a.requireAuth(a.handleReportsExport))
 
 	mux.HandleFunc("GET /admin/settings", a.requireAuth(a.handleSettings))
-	mux.HandleFunc("POST /admin/settings", a.requireAuth(a.handleSettingsSave))
+	mux.HandleFunc("POST /admin/settings/general", a.requireAuth(a.handleGeneralSettingsSave))
+	mux.HandleFunc("POST /admin/settings/appearance", a.requireAuth(a.handleAppearanceSave))
+	mux.HandleFunc("POST /admin/settings/behavior", a.requireAuth(a.handleBehaviorSave))
 	mux.HandleFunc("POST /admin/settings/password", a.requireAuth(a.handlePasswordChange))
-	mux.HandleFunc("POST /admin/settings/logo", a.requireAuth(a.handleLogoUpload))
-	mux.HandleFunc("POST /admin/settings/logo/delete", a.requireAuth(a.handleLogoDelete))
 	mux.HandleFunc("GET /admin/settings/backup", a.requireAuth(a.handleBackup))
 }
 
@@ -80,12 +84,14 @@ func (a *app) render(w http.ResponseWriter, name string, v adminView) {
 func (a *app) adminBase(r *http.Request, nav string) adminView {
 	nonce, _ := a.authSession(r)
 	return adminView{
-		SiteName: a.siteName(),
-		NavItems: navItems(nav),
-		Version:  version,
-		CSRF:     a.csrfToken(nonce),
-		Flash:    r.URL.Query().Get("flash"),
-		FlashErr: r.URL.Query().Get("err"),
+		SiteName:   a.siteName(),
+		NavItems:   navItems(nav),
+		Version:    version,
+		CSRF:       a.csrfToken(nonce),
+		Flash:      r.URL.Query().Get("flash"),
+		FlashErr:   r.URL.Query().Get("err"),
+		ThemeMode:  themeModeAttr(a.themeMode()),
+		ThemeColor: a.themeColor(),
 	}
 }
 

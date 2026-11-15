@@ -1,6 +1,6 @@
 {{define "adminTop"}}
 <!doctype html>
-<html lang="en">
+<html lang="en"{{if .ThemeMode}} data-theme="{{.ThemeMode}}"{{end}} data-accent="{{.ThemeColor}}">
 
 <head>
   <meta charset="utf-8">

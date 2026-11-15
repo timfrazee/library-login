@@ -3,53 +3,123 @@
 
 <section class="panel">
   <h2>General</h2>
-  <form method="post" action="/admin/settings" class="stack">
+  <form method="post" action="/admin/settings/general" class="stack">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
-    <label>Site name<input name="site_name" value="{{.Data.SiteName}}"></label>
-    <label>Timezone<input name="timezone" list="tzlist" value="{{.Data.Timezone}}"></label>
+
+    <label>Site name
+      <input name="site_name" value="{{.Data.SiteName}}">
+    </label>
+
+    <label>Timezone
+      <input name="timezone" list="tzlist" value="{{.Data.Timezone}}">
+    </label>
     <datalist id="tzlist">{{range .Data.CommonTimezones}}<option value="{{.}}">{{end}}</datalist>
-    <label>Debounce (seconds)<input type="number" name="debounce" min="0" value="{{.Data.Debounce}}"></label>
-    <label class="check"><input type="checkbox" name="auto_checkout" {{if .Data.AutoCheckout}}checked{{end}}>
-      Auto-checkout people still logged in, daily</label>
-    <label>Auto-checkout time<input type="time" name="auto_checkout_at" value="{{.Data.AutoCheckoutAt}}"></label>
-    <hr>
-    <label>Kiosk heading<input name="kiosk_heading" value="{{.Data.KioskHeading}}"
-        placeholder="{{.Data.SiteName}}"></label>
-    <label>Kiosk instructions<textarea name="kiosk_instructions" rows="3"
-        placeholder="Shown under the heading on the kiosk screen">{{.Data.KioskInstructions}}</textarea></label>
-    <button>Save settings</button>
+
+    <button>Save General Settings</button>
   </form>
 </section>
 
 <section class="panel">
-  <h2>Kiosk logo</h2>
-  <div class="row-form">
-    <form method="post" action="/admin/settings/logo" enctype="multipart/form-data" class="row-form">
-      <input type="hidden" name="csrf" value="{{.CSRF}}">
-      <input type="file" name="logo" accept=".png,.svg,.jpg,.jpeg,.gif,.webp,image/*" required>
-      <button>Upload logo</button>
-    </form>
+  <h2>Appearance</h2>
+  <form method="post" action="/admin/settings/appearance" enctype="multipart/form-data" class="stack">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+
+    <label>Kiosk heading
+      <input name="kiosk_heading" value="{{.Data.KioskHeading}}" placeholder="{{.Data.SiteName}}">
+    </label>
+
+    <label>Kiosk instructions
+      <textarea name="kiosk_instructions" rows="3"
+        placeholder="Shown under the heading on the kiosk screen">{{.Data.KioskInstructions}}</textarea>
+    </label>
+
+    <label>Kiosk input label
+      <input name="kiosk_input_label" value="{{.Data.KioskInputLabel}}" placeholder="Enter your ID">
+    </label>
+
+    <label>Theme
+      <select name="theme_mode">
+        <option value="system" {{if eq .Data.ThemeMode "system"}}selected{{end}}>System default</option>
+        <option value="light" {{if eq .Data.ThemeMode "light"}}selected{{end}}>Light</option>
+        <option value="dark" {{if eq .Data.ThemeMode "dark"}}selected{{end}}>Dark</option>
+      </select>
+    </label>
+
+    <span class="field-label">Accent color</span>
+    <div class="swatches">
+      {{range .Data.Accents}}
+      <label class="swatch" data-accent="{{.Key}}" title="{{.Label}}">
+        <input type="radio" name="theme_color" value="{{.Key}}" {{if eq $.Data.ThemeColor .Key}}checked{{end}}>
+        <span class="dot"></span>
+      </label>
+      {{end}}
+    </div>
+
+    <p>Logo:</p>
     {{if .Data.LogoFile}}
-    <form method="post" action="/admin/settings/logo/delete" class="inline"
-      onsubmit="return confirm('Remove the logo?')">
-      <input type="hidden" name="csrf" value="{{.CSRF}}"><button class="danger">Remove logo</button>
-    </form>
+    <div class="logo-preview">
+      <a href="/logo">
+        <img src="/logo" alt="Current logo">
+      </a>
+    </div>
+
+    <label class="check">
+      <input type="checkbox" name="delete_logo">
+      Remove logo?
+    </label>
+    {{else}}
+    <p class="muted">No logo uploaded.</p>
     {{end}}
-  </div>
-  {{if .Data.LogoFile}}<p>Current logo: <code>{{.Data.LogoFile}}</code> — <a href="/logo" target="_blank">view</a></p>
-  {{else}}<p class="muted">No logo uploaded.</p>{{end}}
-  <p class="muted">Max 2&nbsp;MB. Or save an image named <code>logo.png</code> (<code>.svg/.jpg/.jpeg/.gif/.webp</code>)
-    directly in the application folder: <code>{{.Data.DataDir}}</code></p>
+    <p class="muted">Max 2&nbsp;MB (<code>.svg/.jpg/.jpeg/.gif/.webp</code>)</p>
+    <input type="file" name="logo" accept=".png,.svg,.jpg,.jpeg,.gif,.webp">
+
+    <button>Save Appearance Settings</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Behavior</h2>
+  <form method="post" action="/admin/settings/behavior" class="stack">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+
+    <label>Debounce (seconds)
+      <input type="number" name="debounce" min="0" value="{{.Data.Debounce}}">
+    </label>
+    <p class="muted">Prevents the same ID from being accidentally scanned/entered in quick succession</p>
+
+    <hr />
+
+    <label class="check">
+      <input type="checkbox" name="auto_checkout" {{if .Data.AutoCheckout}}checked{{end}}>
+      Auto-checkout all logged-in visitors at a certain time each day?
+    </label>
+
+    <label>Auto-checkout time
+      <input type="time" name="auto_checkout_at" value="{{.Data.AutoCheckoutAt}}">
+    </label>
+
+    <button>Save Behavior Settings</button>
+  </form>
 </section>
 
 <section class="panel">
   <h2>Change admin password</h2>
   <form method="post" action="/admin/settings/password" class="stack">
     <input type="hidden" name="csrf" value="{{.CSRF}}">
-    <label>Current password<input type="password" name="current" required></label>
-    <label>New password<input type="password" name="new" required minlength="8"></label>
-    <label>Confirm new password<input type="password" name="confirm" required minlength="8"></label>
-    <button>Change password</button>
+
+    <label>Current password
+      <input type="password" name="current" required>
+    </label>
+
+    <label>New password
+      <input type="password" name="new" required minlength="8">
+    </label>
+
+    <label>Confirm new password
+      <input type="password" name="confirm" required minlength="8">
+    </label>
+
+    <button>Change Password</button>
   </form>
 </section>
 
