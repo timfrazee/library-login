@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0](https://github.com/timfrazee/library-login/compare/v1.0.0...v1.1.0) (2026-11-15)
+
+
+### Features
+
+* implement sound playback on log in/out/failure ([43770ee](https://github.com/timfrazee/library-login/commit/43770ee964fe9f9d6e48cf3e7b9195d556432cbe))
+* improve audio upload UI; limit to 1MB/5secs ([1eebd1f](https://github.com/timfrazee/library-login/commit/1eebd1f04a1ea422f2de5b9ecfb18008473eb345))
+* improve kiosk flash UI; make button text customizable ([ff0ecd1](https://github.com/timfrazee/library-login/commit/ff0ecd10b0d7c3a00cf7f66ca5b335b2e419214f))
+* remove kiosk confirmation on input ([a35e4c4](https://github.com/timfrazee/library-login/commit/a35e4c47abad3b1309a62a4a8f0d4c4ef6a43c7f))
+
 ## [1.0.0](https://github.com/timfrazee/library-login/compare/v0.2.0...v1.0.0) (2026-11-15)
 
 
