@@ -107,6 +107,35 @@
 </section>
 
 <section class="panel">
+  <h2>Audio</h2>
+  <form method="post" action="/admin/settings/audio" enctype="multipart/form-data" class="stack">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+
+    <label class="check">
+      <input type="checkbox" name="kiosk_sound" {{if .Data.SoundEnabled}}checked{{end}}>
+      Play sounds on the kiosk when a visitor logs in or out, or when they fail to provide a valid ID
+    </label>
+
+    {{range .Data.Sounds}}
+    <hr />
+    <span class="field-label">On {{.Label}}</span>
+    <audio controls preload="none" src="/sound/{{.Event}}"></audio>
+    {{if .Custom}}
+    <label class="check">
+      <input type="checkbox" name="delete_sound_{{.Event}}">
+      Remove custom sound (restore default)
+    </label>
+    {{end}}
+    <input type="file" name="sound_{{.Event}}" accept=".wav,.mp3,.ogg">
+    {{end}}
+
+    <p class="muted">Max 2&nbsp;MB each (<code>.wav/.mp3/.ogg</code>)</p>
+
+    <button>Save Audio Settings</button>
+  </form>
+</section>
+
+<section class="panel">
   <h2>Change admin password</h2>
   <form method="post" action="/admin/settings/password" class="stack">
     <input type="hidden" name="csrf" value="{{.CSRF}}">

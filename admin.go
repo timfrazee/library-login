@@ -71,6 +71,7 @@ func (a *app) registerAdmin(mux *http.ServeMux) {
 	mux.HandleFunc("GET /admin/settings", a.requireAuth(a.handleSettings))
 	mux.HandleFunc("POST /admin/settings/general", a.requireAuth(a.handleGeneralSettingsSave))
 	mux.HandleFunc("POST /admin/settings/appearance", a.requireAuth(a.handleAppearanceSave))
+	mux.HandleFunc("POST /admin/settings/audio", a.requireAuth(a.handleAudioSave))
 	mux.HandleFunc("POST /admin/settings/behavior", a.requireAuth(a.handleBehaviorSave))
 	mux.HandleFunc("POST /admin/settings/password", a.requireAuth(a.handlePasswordChange))
 	mux.HandleFunc("GET /admin/settings/backup", a.requireAuth(a.handleBackup))

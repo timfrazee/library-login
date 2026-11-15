@@ -23,16 +23,73 @@
     </form>
   </main>
   <script>
+    const form = document.querySelector('form');
     const input = document.getElementById('id');
-    const overlay = document.querySelector('.input-msg');
+    const wrap = document.querySelector('.input-wrap');
 
-    if (overlay) {
-      history.replaceState(null, '', '/'); // drop the query so a refresh doesn't replay it
-      const timer = setTimeout(() => overlay.remove(), 4000);
-      input.addEventListener('keydown', () => {
-        clearTimeout(timer);
-        overlay.remove();
-      }, { once: true });
+    {{if .SoundEnabled}}
+    const sounds = { in: new Audio('/sound/login'), out: new Audio('/sound/logout'), error: new Audio('/sound/error') };
+    for (const a of Object.values(sounds)) a.preload = 'auto';
+
+    // Browsers only let audio play once the user has interacted with the page.
+    // The first keystroke unlocks each element with a silent play so later
+    // results can sound even though the fetch resolves after the gesture ends.
+    let unlocked = false;
+    const unlock = () => {
+      if (unlocked) return;
+      unlocked = true;
+      for (const a of Object.values(sounds)) {
+        a.muted = true;
+        a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; });
+      }
+    };
+    document.addEventListener('keydown', unlock, { once: true });
+    document.addEventListener('pointerdown', unlock, { once: true });
+
+    const playSound = (status) => {
+      const a = sounds[status];
+      if (a) { a.currentTime = 0; a.play().catch(() => {}); }
+    };
+    {{else}}
+    const playSound = () => {};
+    {{end}}
+
+    let timer;
+    const showMessage = (msg, status) => {
+      wrap.querySelector('.input-msg')?.remove();
+      const el = document.createElement('div');
+      el.className = 'input-msg';
+      el.dataset.status = status;
+      const span = document.createElement('span');
+      span.textContent = msg;
+      el.appendChild(span);
+      wrap.appendChild(el);
+      clearTimeout(timer);
+      timer = setTimeout(() => el.remove(), 4000);
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch('/submit', { method: 'POST', headers: { Accept: 'application/json' }, body: new FormData(form) });
+        if (!res.ok) throw new Error('submit failed');
+        const data = await res.json();
+        playSound(data.status);
+        showMessage(data.msg, data.status);
+      } catch (err) {
+        form.submit(); // fall back to the plain redirect flow
+        return;
+      }
+      input.value = '';
+      input.focus();
+    });
+
+    // A server-rendered overlay only appears via the no-JS redirect fallback.
+    const initial = wrap.querySelector('.input-msg');
+    if (initial) {
+      history.replaceState(null, '', '/');
+      const t = setTimeout(() => initial.remove(), 4000);
+      input.addEventListener('keydown', () => { clearTimeout(t); initial.remove(); }, { once: true });
     }
     input.focus();
   </script>

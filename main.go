@@ -40,6 +40,7 @@ const (
 	cfgKioskButtonLabel    = "kiosk_button_label"
 	cfgThemeMode           = "theme_mode"
 	cfgThemeColor          = "theme_color"
+	cfgKioskSoundEnabled   = "kiosk_sound_enabled"
 )
 
 type app struct {
@@ -141,6 +142,7 @@ func (a *app) routes() http.Handler {
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSub))))
 	mux.HandleFunc("GET /{$}", a.handleKiosk)
 	mux.HandleFunc("GET /logo", a.handleLogo)
+	mux.HandleFunc("GET /sound/{event}", a.handleSound)
 	mux.HandleFunc("POST /submit", a.handleSubmit)
 	a.registerAdmin(mux)
 	return mux

@@ -12,10 +12,13 @@ import (
 )
 
 const maxLogoBytes = 2 << 20
+const maxSoundBytes = 2 << 20
 
 var allowedLogoExt = map[string]bool{
 	".png": true, ".svg": true, ".jpg": true, ".jpeg": true, ".gif": true, ".webp": true,
 }
+
+var allowedSoundExt = map[string]bool{".wav": true, ".mp3": true, ".ogg": true}
 
 type settingsData struct {
 	SiteName          string
@@ -33,6 +36,22 @@ type settingsData struct {
 	ThemeMode         string
 	ThemeColor        string
 	Accents           []accent
+	SoundEnabled      bool
+	Sounds            []soundSetting
+}
+
+// soundSetting describes one kiosk sound in the admin Audio panel: whether a
+// custom file has replaced the packaged default.
+type soundSetting struct {
+	Event  string
+	Label  string
+	Custom bool
+}
+
+var kioskSoundLabels = []struct{ Event, Label string }{
+	{"login", "Login"},
+	{"logout", "Logout"},
+	{"error", "Failure"},
 }
 
 func (a *app) handleSettings(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +76,8 @@ func (a *app) handleSettings(w http.ResponseWriter, r *http.Request) {
 		ThemeMode:         a.themeMode(),
 		ThemeColor:        a.themeColor(),
 		Accents:           accents,
+		SoundEnabled:      a.kioskSoundEnabled(),
+		Sounds:            a.soundSettings(),
 	}
 	a.render(w, "settings.html", v)
 }
@@ -116,6 +137,93 @@ func (a *app) handleAppearanceSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/admin/settings?flash=Appearance+saved", http.StatusSeeOther)
+}
+
+func (a *app) soundSettings() []soundSetting {
+	out := make([]soundSetting, len(kioskSoundLabels))
+	for i, s := range kioskSoundLabels {
+		_, custom := a.soundPath(s.Event)
+		out[i] = soundSetting{Event: s.Event, Label: s.Label, Custom: custom}
+	}
+	return out
+}
+
+func (a *app) handleAudioSave(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, int64(len(soundEvents))*maxSoundBytes+4096)
+	if err := r.ParseMultipartForm(maxSoundBytes); err != nil {
+		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("File too large (max 2 MB each)"), http.StatusSeeOther)
+		return
+	}
+	if !a.checkCSRF(r) {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	_ = setConfig(a.db, cfgKioskSoundEnabled, boolConfig(r.FormValue("kiosk_sound") == "on"))
+
+	for event := range soundEvents {
+		if r.FormValue("delete_sound_"+event) == "on" {
+			a.deleteSound(event)
+			continue
+		}
+		if soundErr := a.saveSound(r, event); soundErr != "" {
+			http.Redirect(w, r, "/admin/settings?err="+soundErr, http.StatusSeeOther)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "/admin/settings?flash=Audio+saved", http.StatusSeeOther)
+}
+
+// saveSound stores an uploaded sound as <event>.<ext> in the data dir, replacing
+// any existing custom sound for that event. It assumes the multipart form is
+// already parsed; a missing file is not an error. It returns a URL-escaped
+// message on a real failure, or "" on success or no upload.
+func (a *app) saveSound(r *http.Request, event string) string {
+	file, header, err := r.FormFile("sound_" + event)
+	if err != nil {
+		return ""
+	}
+	defer file.Close()
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if !allowedSoundExt[ext] {
+		return url.QueryEscape("Unsupported audio type (use .wav, .mp3, or .ogg)")
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return url.QueryEscape("Could not read file")
+	}
+	if !validAudio(ext, data) {
+		return url.QueryEscape("That file is not a valid " + ext[1:] + " audio file")
+	}
+
+	a.deleteSound(event)
+	if err := os.WriteFile(filepath.Join(a.dataDir, event+ext), data, 0o644); err != nil {
+		return url.QueryEscape("Internal server error")
+	}
+	return ""
+}
+
+func (a *app) deleteSound(event string) {
+	for _, ext := range soundExts {
+		_ = os.Remove(filepath.Join(a.dataDir, event+ext))
+	}
+}
+
+// validAudio does a light magic-byte check so an uploaded file's contents match
+// its extension; it is a sanity gate, not a full decoder.
+func validAudio(ext string, data []byte) bool {
+	switch ext {
+	case ".wav":
+		return len(data) >= 12 && string(data[:4]) == "RIFF" && string(data[8:12]) == "WAVE"
+	case ".ogg":
+		return len(data) >= 4 && string(data[:4]) == "OggS"
+	case ".mp3":
+		return len(data) >= 3 && (string(data[:3]) == "ID3" || (data[0] == 0xFF && data[1]&0xE0 == 0xE0))
+	}
+	return false
 }
 
 func (a *app) handleBehaviorSave(w http.ResponseWriter, r *http.Request) {
