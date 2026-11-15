@@ -12,7 +12,7 @@ import (
 )
 
 const maxLogoBytes = 2 << 20
-const maxSoundBytes = 2 << 20
+const maxSoundBytes = 1 << 20
 
 var allowedLogoExt = map[string]bool{
 	".png": true, ".svg": true, ".jpg": true, ".jpeg": true, ".gif": true, ".webp": true,
@@ -151,7 +151,7 @@ func (a *app) soundSettings() []soundSetting {
 func (a *app) handleAudioSave(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, int64(len(soundEvents))*maxSoundBytes+4096)
 	if err := r.ParseMultipartForm(maxSoundBytes); err != nil {
-		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("File too large (max 2 MB each)"), http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/settings?err="+url.QueryEscape("File too large (max 1 MB each)"), http.StatusSeeOther)
 		return
 	}
 	if !a.checkCSRF(r) {
@@ -172,7 +172,7 @@ func (a *app) handleAudioSave(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.Redirect(w, r, "/admin/settings?flash=Audio+saved", http.StatusSeeOther)
+	http.Redirect(w, r, "/admin/settings?flash=Audio+saved+-+Reload+the+kiosk+page+to+hear+changes", http.StatusSeeOther)
 }
 
 // saveSound stores an uploaded sound as <event>.<ext> in the data dir, replacing
@@ -189,6 +189,9 @@ func (a *app) saveSound(r *http.Request, event string) string {
 	ext := strings.ToLower(filepath.Ext(header.Filename))
 	if !allowedSoundExt[ext] {
 		return url.QueryEscape("Unsupported audio type (use .wav, .mp3, or .ogg)")
+	}
+	if header.Size > maxSoundBytes {
+		return url.QueryEscape("File too large (max 1 MB each)")
 	}
 
 	data, err := io.ReadAll(file)

@@ -74,8 +74,11 @@
     {{else}}
     <p class="muted">No logo uploaded.</p>
     {{end}}
-    <p class="muted">Max 2&nbsp;MB (<code>.svg/.jpg/.jpeg/.gif/.webp</code>)</p>
-    <input type="file" name="logo" accept=".png,.svg,.jpg,.jpeg,.gif,.webp">
+    <label class="file-input">
+      <input type="file" name="logo" accept="image/png,image/svg+xml,image/jpeg,image/gif,image/webp,.png,.svg,.jpg,.jpeg,.gif,.webp">
+      <span class="file-input-glyph" aria-hidden="true">&#x2912;</span>
+      <span class="file-input-text">Replace the logo &middot; .svg/.jpg/.jpeg/.gif/.png/.webp &middot; max 2&nbsp;MB</span>
+    </label>
 
     <button>Save Appearance Settings</button>
   </form>
@@ -118,18 +121,23 @@
 
     {{range .Data.Sounds}}
     <hr />
-    <span class="field-label">On {{.Label}}</span>
-    <audio controls preload="none" src="/sound/{{.Event}}"></audio>
+    <span class="field-label strong">{{.Label}}</span>
+    <div class="preview-input-wrapper">
+      <audio controls preload="none" src="/sound/{{.Event}}"></audio>
+      <label class="file-input{{if .Custom}} is-custom{{end}}">
+        <input type="file" name="sound_{{.Event}}" accept="audio/wav,audio/mpeg,audio/ogg,.wav,.mp3,.ogg">
+        <span class="file-input-glyph" aria-hidden="true">&#x2912;</span>
+        <span class="file-input-badge">{{if .Custom}}Custom{{else}}Default{{end}}</span>
+        <span class="file-input-text">.wav, .mp3 or .ogg &middot; max 5&nbsp;seconds, 1&nbsp;MB</span>
+      </label>
+    </div>
     {{if .Custom}}
     <label class="check">
       <input type="checkbox" name="delete_sound_{{.Event}}">
       Remove custom sound (restore default)
     </label>
     {{end}}
-    <input type="file" name="sound_{{.Event}}" accept=".wav,.mp3,.ogg">
     {{end}}
-
-    <p class="muted">Max 2&nbsp;MB each (<code>.wav/.mp3/.ogg</code>)</p>
 
     <button>Save Audio Settings</button>
   </form>
@@ -161,4 +169,13 @@
   <p class="muted">Download a complete snapshot of the database.</p>
   <a class="btn" href="/admin/settings/backup">Download backup</a>
 </section>
+
+<script>
+  for (const input of document.querySelectorAll('.file-input input[type=file]')) {
+    const text = input.parentElement.querySelector('.file-input-text');
+    input.addEventListener('change', () => {
+      if (input.files.length) text.textContent = input.files[0].name;
+    });
+  }
+</script>
 {{template "adminBottom" .}}

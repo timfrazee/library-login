@@ -417,6 +417,10 @@ button.danger {
   color: var(--muted);
 }
 
+.field-label.strong {
+  font-weight: bold;
+}
+
 .swatches {
   display: flex;
   flex-wrap: wrap;
@@ -459,6 +463,80 @@ button.danger {
 .swatch input:focus-visible + .dot {
   outline: 2px solid var(--text);
   outline-offset: 4px;
+}
+
+/* ---------- File input ---------- */
+.file-input {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  margin-bottom: 0;
+  padding: 0.8rem 1rem;
+  border: 2px dashed var(--border);
+  border-radius: 0.5rem;
+  background: var(--input-bg);
+}
+
+.file-input input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  opacity: 0;
+}
+
+.file-input .file-input-glyph {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.file-input .file-input-text {
+  color: var(--muted);
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.file-input .file-input-badge {
+  flex-shrink: 0;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.file-input:hover,
+.file-input:has(input:focus-visible) {
+  border-color: var(--accent);
+}
+
+.file-input.is-custom {
+  border-style: solid;
+  border-color: var(--accent);
+}
+
+.file-input.is-custom .file-input-badge {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.preview-input-wrapper {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.preview-input-wrapper .file-input {
+  flex: 1;
 }
 
 table {

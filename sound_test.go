@@ -49,13 +49,22 @@ func TestSettingsAudioPanel(t *testing.T) {
 	tpl := themeTemplates(t)
 	out := render(t, tpl, "settings.html", adminView{Data: settingsData{
 		SoundEnabled: true,
-		Sounds:       []soundSetting{{Event: "login", Label: "Login", Custom: true}},
+		Sounds: []soundSetting{
+			{Event: "login", Label: "Login", Custom: true},
+			{Event: "logout", Label: "Logout", Custom: false},
+		},
 	}})
 	if !strings.Contains(out, `name="kiosk_sound" checked`) {
 		t.Error("audio toggle should reflect the enabled state")
 	}
 	if !strings.Contains(out, `src="/sound/login"`) || !strings.Contains(out, `name="delete_sound_login"`) {
 		t.Error("audio panel should preview a sound and offer removal of a custom file")
+	}
+	if !strings.Contains(out, `class="file-input is-custom"`) || !strings.Contains(out, `>Custom</span>`) {
+		t.Error("a customized sound should show the custom state")
+	}
+	if !strings.Contains(out, `>Default</span>`) {
+		t.Error("an uncustomized sound should show the default state")
 	}
 }
 

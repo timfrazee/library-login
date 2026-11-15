@@ -46,9 +46,29 @@
     document.addEventListener('keydown', unlock, { once: true });
     document.addEventListener('pointerdown', unlock, { once: true });
 
+    // Cap playback regardless of how long an uploaded sound is, fading out over
+    // the final stretch so the cut is not abrupt.
+    const MAX_SOUND_MS = 5000, FADE_MS = 300, FADE_STEP_MS = 50;
+    const resetSound = (a) => {
+      clearTimeout(a._fade);
+      clearInterval(a._tick);
+      clearTimeout(a._end);
+      a.pause();
+      a.currentTime = 0;
+      a.volume = 1;
+    };
     const playSound = (status) => {
       const a = sounds[status];
-      if (a) { a.currentTime = 0; a.play().catch(() => {}); }
+      if (!a) return;
+      resetSound(a);
+      a.play().catch(() => {});
+      a._fade = setTimeout(() => {
+        a._tick = setInterval(() => {
+          a.volume = Math.max(0, a.volume - FADE_STEP_MS / FADE_MS);
+          if (a.volume === 0 || a.paused || a.ended) clearInterval(a._tick);
+        }, FADE_STEP_MS);
+      }, MAX_SOUND_MS - FADE_MS);
+      a._end = setTimeout(() => resetSound(a), MAX_SOUND_MS);
     };
     {{else}}
     const playSound = () => {};
