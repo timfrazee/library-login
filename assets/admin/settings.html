@@ -60,24 +60,25 @@
     </div>
 
     <p>Logo:</p>
-    {{if .Data.LogoFile}}
-    <div class="logo-preview">
-      <a href="/logo">
-        <img src="/logo" alt="Current logo">
-      </a>
+
+    <div class="preview-input-wrapper">
+      {{if .Data.LogoFile}}
+      <div class="logo-preview">
+        <a href="/logo">
+          <img src="/logo" alt="Current logo">
+        </a>
+      </div>
+      {{end}}
+      <label class="file-input">
+        <input type="file" name="logo" accept="image/png,image/svg+xml,image/jpeg,image/gif,image/webp,.png,.svg,.jpg,.jpeg,.gif,.webp">
+        <span class="file-input-glyph" aria-hidden="true">&#x2912;</span>
+        <span class="file-input-text">Replace the logo &middot; .svg/.jpg/.jpeg/.gif/.png/.webp &middot; max 2&nbsp;MB</span>
+      </label>
     </div>
 
     <label class="check">
       <input type="checkbox" name="delete_logo">
       Remove logo?
-    </label>
-    {{else}}
-    <p class="muted">No logo uploaded.</p>
-    {{end}}
-    <label class="file-input">
-      <input type="file" name="logo" accept="image/png,image/svg+xml,image/jpeg,image/gif,image/webp,.png,.svg,.jpg,.jpeg,.gif,.webp">
-      <span class="file-input-glyph" aria-hidden="true">&#x2912;</span>
-      <span class="file-input-text">Replace the logo &middot; .svg/.jpg/.jpeg/.gif/.png/.webp &middot; max 2&nbsp;MB</span>
     </label>
 
     <button>Save Appearance Settings</button>

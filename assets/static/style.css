@@ -535,10 +535,6 @@ button.danger {
   gap: 30px;
 }
 
-.preview-input-wrapper .file-input {
-  flex: 1;
-}
-
 table {
   width: 100%;
   border-collapse: collapse;

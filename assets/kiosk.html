@@ -88,6 +88,11 @@
       timer = setTimeout(() => el.remove(), 4000);
     };
 
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      wrap.querySelector('.input-msg')?.remove();
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
