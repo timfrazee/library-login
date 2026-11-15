@@ -37,6 +37,10 @@
       <input name="kiosk_input_label" value="{{.Data.KioskInputLabel}}" placeholder="Enter your ID">
     </label>
 
+    <label>Kiosk button label
+      <input name="kiosk_button_label" value="{{.Data.KioskButtonLabel}}" placeholder="Log in / out">
+    </label>
+
     <label>Theme
       <select name="theme_mode">
         <option value="system" {{if eq .Data.ThemeMode "system"}}selected{{end}}>System default</option>

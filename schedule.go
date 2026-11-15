@@ -18,6 +18,7 @@ type periodRow struct {
 	DayLabel   string
 	Start      string
 	End        string
+	Selected   map[int]bool
 	weekdays   []int
 	startClock string
 	endClock   string
@@ -39,15 +40,17 @@ func (a *app) listPeriods() ([]periodRow, error) {
 		}
 		p.weekdays = parseWeekdays(wd)
 		p.DayLabel = weekdayLabel(p.weekdays)
+		p.Selected = intSet(p.weekdays)
 		p.Start, p.End = p.startClock, p.endClock
 		out = append(out, p)
 	}
 	return out, rows.Err()
 }
 
-// addPeriod validates and inserts a period, rejecting any that overlaps an
-// existing one on a shared weekday so resolvePeriod never faces ambiguity.
-func (a *app) addPeriod(name string, weekdays []int, start, end string) error {
+// validatePeriod checks a period's fields and rejects any overlap on a shared
+// weekday with an existing period so resolvePeriod never faces ambiguity. The
+// period whose id is excludeID is skipped, letting an edit keep its own slot.
+func (a *app) validatePeriod(name string, weekdays []int, start, end string, excludeID int64) error {
 	if name == "" {
 		return errors.New("Name is required")
 	}
@@ -63,13 +66,35 @@ func (a *app) addPeriod(name string, weekdays []int, start, end string) error {
 	}
 	wset := intSet(weekdays)
 	for _, ex := range existing {
+		if ex.ID == excludeID {
+			continue
+		}
 		if sharesWeekday(wset, ex.weekdays) && start < ex.endClock && ex.startClock < end {
 			return errors.New("Overlaps \"" + ex.Name + "\"")
 		}
 	}
-	_, err = a.db.Exec(
+	return nil
+}
+
+func (a *app) addPeriod(name string, weekdays []int, start, end string) error {
+	if err := a.validatePeriod(name, weekdays, start, end, 0); err != nil {
+		return err
+	}
+	_, err := a.db.Exec(
 		`INSERT INTO periods(name, weekdays, start_time, end_time, active) VALUES(?,?,?,?,1)`,
 		name, joinWeekdays(weekdays), start, end)
+	return err
+}
+
+// updatePeriod validates and saves edits to an existing period, excluding that
+// period from the overlap check so an unchanged slot is not flagged.
+func (a *app) updatePeriod(id int64, name string, weekdays []int, start, end string) error {
+	if err := a.validatePeriod(name, weekdays, start, end, id); err != nil {
+		return err
+	}
+	_, err := a.db.Exec(
+		`UPDATE periods SET name=?, weekdays=?, start_time=?, end_time=? WHERE id=?`,
+		name, joinWeekdays(weekdays), start, end, id)
 	return err
 }
 
@@ -92,19 +117,50 @@ func (a *app) handleScheduleAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	var weekdays []int
-	for _, s := range r.Form["weekdays"] {
-		if n, err := strconv.Atoi(s); err == nil && n >= 0 && n <= 6 {
-			weekdays = append(weekdays, n)
-		}
-	}
-	err := a.addPeriod(strings.TrimSpace(r.FormValue("name")), weekdays,
+	err := a.addPeriod(strings.TrimSpace(r.FormValue("name")), formWeekdays(r),
 		r.FormValue("start"), r.FormValue("end"))
 	if err != nil {
 		http.Redirect(w, r, "/admin/schedule?err="+url.QueryEscape(err.Error()), http.StatusSeeOther)
 		return
 	}
 	http.Redirect(w, r, "/admin/schedule?flash=Period+added", http.StatusSeeOther)
+}
+
+// handleScheduleUpdate saves inline edits to one period, responding with the
+// recomputed display fields as JSON rather than a redirect.
+func (a *app) handleScheduleUpdate(w http.ResponseWriter, r *http.Request) {
+	if !a.checkCSRF(r) {
+		writeJSONError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+	id, err := strconv.ParseInt(r.FormValue("id"), 10, 64)
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid period")
+		return
+	}
+	weekdays := formWeekdays(r)
+	name := strings.TrimSpace(r.FormValue("name"))
+	start, end := r.FormValue("start"), r.FormValue("end")
+	if err := a.updatePeriod(id, name, weekdays, start, end); err != nil {
+		writeJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, map[string]string{
+		"name":  name,
+		"days":  weekdayLabel(weekdays),
+		"start": start,
+		"end":   end,
+	})
+}
+
+func formWeekdays(r *http.Request) []int {
+	var weekdays []int
+	for _, s := range r.Form["weekdays"] {
+		if n, err := strconv.Atoi(s); err == nil && n >= 0 && n <= 6 {
+			weekdays = append(weekdays, n)
+		}
+	}
+	return weekdays
 }
 
 func (a *app) handleScheduleDelete(w http.ResponseWriter, r *http.Request) {

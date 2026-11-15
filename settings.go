@@ -27,6 +27,7 @@ type settingsData struct {
 	KioskHeading      string
 	KioskInstructions string
 	KioskInputLabel   string
+	KioskButtonLabel  string
 	DataDir           string
 	LogoFile          string
 	ThemeMode         string
@@ -50,6 +51,7 @@ func (a *app) handleSettings(w http.ResponseWriter, r *http.Request) {
 		KioskHeading:      configOr(a.db, cfgKioskHeading, ""),
 		KioskInstructions: configOr(a.db, cfgKioskInstructions, ""),
 		KioskInputLabel:   configOr(a.db, cfgKioskInputLabel, "Enter your ID"),
+		KioskButtonLabel:  configOr(a.db, cfgKioskButtonLabel, "Log in / out"),
 		DataDir:           a.dataDir,
 		LogoFile:          logoFile,
 		ThemeMode:         a.themeMode(),
@@ -103,6 +105,8 @@ func (a *app) handleAppearanceSave(w http.ResponseWriter, r *http.Request) {
 	_ = setConfig(a.db, cfgKioskInstructions, strings.TrimSpace(instructions))
 
 	_ = setConfig(a.db, cfgKioskInputLabel, strings.TrimSpace(r.FormValue("kiosk_input_label")))
+
+	_ = setConfig(a.db, cfgKioskButtonLabel, strings.TrimSpace(r.FormValue("kiosk_button_label")))
 
 	if r.FormValue("delete_logo") == "on" {
 		a.deleteLogo()

@@ -28,12 +28,15 @@ func render(t *testing.T, tpl *template.Template, name string, data any) string 
 func TestKioskThemeAttributes(t *testing.T) {
 	tpl := themeTemplates(t)
 
-	dark := render(t, tpl, "kiosk.html", kioskView{ThemeMode: "dark", ThemeColor: "violet", InputLabel: "Scan your badge"})
+	dark := render(t, tpl, "kiosk.html", kioskView{ThemeMode: "dark", ThemeColor: "violet", InputLabel: "Scan your badge", ButtonLabel: "Check in"})
 	if !strings.Contains(dark, `data-theme="dark"`) || !strings.Contains(dark, `data-accent="violet"`) {
 		t.Errorf("explicit mode missing attributes:\n%s", dark[:min(200, len(dark))])
 	}
 	if !strings.Contains(dark, `<label for="id">Scan your badge</label>`) {
 		t.Error("kiosk should render the configured input label")
+	}
+	if !strings.Contains(dark, `>Check in</button>`) {
+		t.Error("kiosk should render the configured button label")
 	}
 
 	system := render(t, tpl, "kiosk.html", kioskView{ThemeMode: "", ThemeColor: "sky"})

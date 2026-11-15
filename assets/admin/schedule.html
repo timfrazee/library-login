@@ -22,7 +22,7 @@
 <section class="panel">
   <h2>Periods</h2>
   {{if .Data.Periods}}
-  <table>
+  <table id="schedule" data-csrf="{{.CSRF}}">
     <thead>
       <tr>
         <th>Name</th>
@@ -34,16 +34,38 @@
     </thead>
     <tbody>
       {{range .Data.Periods}}
-      <tr>
-        <td>{{.Name}}</td>
-        <td>{{.DayLabel}}</td>
-        <td>{{.Start}}</td>
-        <td>{{.End}}</td>
+      <tr data-id="{{.ID}}">
         <td>
-          <form method="post" action="/admin/schedule/delete" class="inline">
-            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><button
-              class="danger">Remove</button>
-          </form>
+          <span class="view-name">{{.Name}}</span>
+          <input class="edit edit-name" value="{{.Name}}" aria-label="Name">
+        </td>
+        <td>
+          <span class="view-days">{{.DayLabel}}</span>
+          <fieldset class="edit edit-days days" aria-label="Weekdays">
+            {{$sel := .Selected}}{{range $.Data.Days}}<label class="check"><input type="checkbox" name="weekdays"
+                value="{{.Value}}" {{if index $sel .Value}}checked{{end}}> {{.Label}}</label>{{end}}
+          </fieldset>
+        </td>
+        <td>
+          <span class="view-start">{{.Start}}</span>
+          <input class="edit edit-start" type="time" value="{{.Start}}" aria-label="Start">
+        </td>
+        <td>
+          <span class="view-end">{{.End}}</span>
+          <input class="edit edit-end" type="time" value="{{.End}}" aria-label="End">
+        </td>
+        <td>
+          <div class="actions">
+            <button type="button" class="act-edit btn-sub btn-icon" title="Edit" aria-label="Edit">&#9998;</button>
+            <div class="edit-actions">
+              <button type="button" class="act-save btn-icon" title="Save" aria-label="Save">&#10003;</button>
+            </div>
+            <form method="post" action="/admin/schedule/delete" class="inline">
+              <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><button
+                class="danger btn-icon" title="Remove" aria-label="Remove">&#10005;</button>
+            </form>
+            <span class="row-msg" role="status"></span>
+          </div>
         </td>
       </tr>
       {{end}}
@@ -51,4 +73,5 @@
   </table>
   {{else}}<p class="muted">No periods defined. Scans will record with no period.</p>{{end}}
 </section>
+<script src="/static/schedule.js" defer></script>
 {{template "adminBottom" .}}

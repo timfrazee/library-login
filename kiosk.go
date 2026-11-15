@@ -12,6 +12,7 @@ type kioskView struct {
 	Heading      string
 	Instructions string
 	InputLabel   string
+	ButtonLabel  string
 	HasLogo      bool
 	Message      string
 	Status       string
@@ -25,6 +26,7 @@ func (a *app) handleKiosk(w http.ResponseWriter, r *http.Request) {
 		Heading:      a.kioskHeading(),
 		Instructions: a.kioskInstructions(),
 		InputLabel:   a.kioskInputLabel(),
+		ButtonLabel:  a.kioskButtonLabel(),
 		HasLogo:      hasLogo,
 		Message:      r.URL.Query().Get("msg"),
 		Status:       r.URL.Query().Get("status"),
@@ -39,6 +41,7 @@ func (a *app) handleKiosk(w http.ResponseWriter, r *http.Request) {
 func (a *app) kioskHeading() string      { return configOr(a.db, cfgKioskHeading, a.siteName()) }
 func (a *app) kioskInstructions() string { return configOr(a.db, cfgKioskInstructions, "") }
 func (a *app) kioskInputLabel() string   { return configOr(a.db, cfgKioskInputLabel, "Enter your ID") }
+func (a *app) kioskButtonLabel() string  { return configOr(a.db, cfgKioskButtonLabel, "Log in / out") }
 
 var logoNames = []string{"logo.png", "logo.svg", "logo.jpg", "logo.jpeg", "logo.gif", "logo.webp"}
 
@@ -79,9 +82,9 @@ func (a *app) handleSubmit(w http.ResponseWriter, r *http.Request) {
 func kioskMessage(res scanResult, loc *time.Location) (msg, status string) {
 	switch res.Status {
 	case statusIn:
-		return "Welcome, " + res.Name + " — logged IN at " + res.At.In(loc).Format("3:04 PM"), "in"
+		return "Welcome, " + res.Name, "in"
 	case statusOut:
-		return "Goodbye, " + res.Name + " — logged OUT at " + res.At.In(loc).Format("3:04 PM"), "out"
+		return "Goodbye, " + res.Name, "out"
 	case statusDebounced:
 		return res.Name + " — already recorded a moment ago", "info"
 	case statusInactive:

@@ -62,6 +62,7 @@ func (a *app) registerAdmin(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /admin/schedule", a.requireAuth(a.handleSchedule))
 	mux.HandleFunc("POST /admin/schedule/add", a.requireAuth(a.handleScheduleAdd))
+	mux.HandleFunc("POST /admin/schedule/update", a.requireAuth(a.handleScheduleUpdate))
 	mux.HandleFunc("POST /admin/schedule/delete", a.requireAuth(a.handleScheduleDelete))
 
 	mux.HandleFunc("GET /admin/reports", a.requireAuth(a.handleReports))

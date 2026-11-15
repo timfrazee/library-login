@@ -96,7 +96,7 @@ a:hover {
 }
 
 main {
-  width: min(32rem, 92vw);
+  width: 85vw;
   text-align: center;
 }
 
@@ -147,6 +147,60 @@ body.kiosk button {
   padding: 0.9rem 2rem;
   font-size: 1.25rem;
   border-radius: 0.75rem;
+}
+
+body.kiosk input[type="text"] {
+  max-width: 32rem;
+}
+
+.input-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.input-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.25rem;
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--panel);
+  font-size: 1.15rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.input-msg span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.input-msg[data-status="in"] {
+  color: var(--in);
+  border-color: var(--in);
+}
+
+.input-msg[data-status="out"] {
+  color: var(--out);
+  border-color: var(--out);
+}
+
+.input-msg[data-status="error"] {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.input-msg[data-status="info"] {
+  color: var(--info);
+  border-color: var(--info);
 }
 
 .flash {
@@ -589,6 +643,21 @@ tr.editing .edit-actions {
 
 .row-msg.error {
   color: var(--error);
+}
+
+/* ---------- Schedule ---------- */
+tr.editing .view-days,
+tr.editing .view-start,
+tr.editing .view-end {
+  display: none;
+}
+
+tr.editing .edit-days {
+  display: flex;
+}
+
+.edit-days {
+  margin: 0;
 }
 
 .appfoot {

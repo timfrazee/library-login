@@ -37,6 +37,7 @@ const (
 	cfgKioskHeading        = "kiosk_heading"
 	cfgKioskInstructions   = "kiosk_instructions"
 	cfgKioskInputLabel     = "kiosk_input_label"
+	cfgKioskButtonLabel    = "kiosk_button_label"
 	cfgThemeMode           = "theme_mode"
 	cfgThemeColor          = "theme_color"
 )
