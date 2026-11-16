@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/timfrazee/library-login/compare/v1.2.0...v1.2.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* update settings form styling ([f20a056](https://github.com/timfrazee/library-login/commit/f20a056a8d4b465cdbe16be7a88245683746a4af))
+
 ## [1.2.0](https://github.com/timfrazee/library-login/compare/v1.1.0...v1.2.0) (2026-11-16)
 
 
