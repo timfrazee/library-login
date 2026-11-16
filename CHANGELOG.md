@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/timfrazee/library-login/compare/v1.1.0...v1.2.0) (2026-11-16)
+
+
+### Features
+
+* add windows exe icon ([b595c79](https://github.com/timfrazee/library-login/commit/b595c79e17244a3cf8748680e82e40ba057ed051))
+* implement kiosk access code ([c686e4b](https://github.com/timfrazee/library-login/commit/c686e4b3cc385c4e6e42955b6279ee669893fbfc))
+
 ## [1.1.0](https://github.com/timfrazee/library-login/compare/v1.0.0...v1.1.0) (2026-11-15)
 
 
