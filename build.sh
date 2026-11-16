@@ -8,6 +8,10 @@ APP="library-login"
 OUT="dist"
 LDFLAGS="-s -w -X main.version=${VERSION}"
 MAINTAINER="${MAINTAINER:-Library Login <noreply@example.com>}"
+GOVERSIONINFO="github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest"
+
+# Coerce a version component like "dev" into a Windows VERSIONINFO integer field.
+intor0() { case "$1" in '' | *[!0-9]*) echo 0 ;; *) echo "$1" ;; esac; }
 
 cd "$(dirname "$0")" >/dev/null
 rm -rf "$OUT"
@@ -86,10 +90,26 @@ build() {
   local bin="${APP}"
   [ "$os" = "windows" ] && bin="${APP}.exe"
 
+  # go build auto-links a rsrc_${GOOS}_${GOARCH}.syso from the package dir; that
+  # is how the Windows exe gets its icon and version metadata.
+  local syso=""
+  if [ "$os" = "windows" ]; then
+    syso="rsrc_${os}_${arch}.syso"
+    local vmaj vmin vpat
+    IFS='.' read -r vmaj vmin vpat _ <<<"$VERSION"
+    go run "$GOVERSIONINFO" \
+      -icon packaging/icon.ico \
+      -ver-major "$(intor0 "$vmaj")" -ver-minor "$(intor0 "$vmin")" \
+      -ver-patch "$(intor0 "$vpat")" -ver-build 0 \
+      -product-version "$VERSION" -file-version "$VERSION" \
+      -o "$syso" packaging/versioninfo.json
+  fi
+
   echo "building ${os}/${arch}..."
   mkdir -p "$dir"
   CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
     go build -trimpath -ldflags "$LDFLAGS" -o "${dir}/${bin}" .
+  [ -n "$syso" ] && rm -f "$syso"
   readme "$os" >"${dir}/README.txt"
   if [ "$os" = "darwin" ]; then
     cp packaging/run.command "${dir}/run.command"

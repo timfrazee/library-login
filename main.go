@@ -125,6 +125,9 @@ func main() {
 		case len(urls) > 1:
 			fmt.Println("  Open one of these in the browser on your other devices -- try the first one.")
 		}
+		if hint := firewallHint(boundPort); hint != "" {
+			fmt.Println(hint)
+		}
 	}
 	fmt.Printf("Leave this running. The form is at %s\n", url)
 	if *openUI {

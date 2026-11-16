@@ -10,6 +10,7 @@ logo.*
 /library-login
 /library-login.exe
 /dist/
+*.syso
 
 # Local environment overrides
 .env

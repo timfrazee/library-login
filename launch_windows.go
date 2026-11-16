@@ -23,6 +23,19 @@ var (
 	procGetConsoleProcessList = kernel32.NewProc("GetConsoleProcessList")
 )
 
+// firewallHint returns the message shown in Network mode so a user whose devices
+// cannot connect knows Windows Firewall is the likely cause and how an admin
+// opens the port once. Adding an inbound rule requires elevation, so a standard
+// user cannot approve the one-time Windows prompt themselves.
+func firewallHint(port int) string {
+	return fmt.Sprintf(
+		"If other devices cannot connect, Windows Firewall is probably blocking it.\n"+
+			"  Ask an administrator to allow it once from an elevated Command Prompt:\n"+
+			"    netsh advfirewall firewall add rule name=\"Library Login\" dir=in action=allow protocol=TCP localport=%d",
+		port,
+	)
+}
+
 // isDoubleClick reports whether this process is the only one attached to its
 // console. GetConsoleProcessList returns the count of attached processes; a
 // result of 1 means Windows allocated a fresh console for a double-click rather
