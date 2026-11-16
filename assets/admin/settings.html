@@ -15,6 +15,12 @@
     </label>
     <datalist id="tzlist">{{range .Data.CommonTimezones}}<option value="{{.}}">{{end}}</datalist>
 
+    <label>Kiosk access code
+      <input name="kiosk_access_code" value="{{.Data.KioskAccessCode}}" placeholder="Leave blank to allow any device">
+      <div class="muted">When set, each new device must enter this code once before it can connect as a kiosk. Prevents unauthorized devices from registering log in/out activities.</div>
+      <div class="muted">The computer running the app is always exempt.</div>
+    </label>
+
     <button>Save General Settings</button>
   </form>
 </section>

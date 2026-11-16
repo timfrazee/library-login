@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"{{if .ThemeMode}} data-theme="{{.ThemeMode}}"{{end}} data-accent="{{.ThemeColor}}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Heading}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="kiosk">
+  <main>
+    {{if .HasLogo}}<img class="logo" src="/logo" alt="">{{end}}
+    <h1>{{.Heading}}</h1>
+    <p class="instructions">Enter the access code to use this device as a kiosk.</p>
+    {{if .FlashErr}}<div class="flash flash-error">{{.FlashErr}}</div>{{end}}
+    <form method="post" action="/kiosk-unlock" autocomplete="off">
+      <label for="code">Access code</label>
+      <input id="code" name="code" type="password" autofocus required>
+      <button type="submit">Unlock</button>
+    </form>
+  </main>
+</body>
+
+</html>

@@ -41,6 +41,7 @@ const (
 	cfgThemeMode           = "theme_mode"
 	cfgThemeColor          = "theme_color"
 	cfgKioskSoundEnabled   = "kiosk_sound_enabled"
+	cfgKioskAccessCode     = "kiosk_access_code"
 )
 
 type app struct {
@@ -51,6 +52,9 @@ type app struct {
 	mu        sync.Mutex
 	failCount int
 	lockUntil time.Time
+
+	kioskFailCount int
+	kioskLockUntil time.Time
 }
 
 func main() {
@@ -143,10 +147,11 @@ func (a *app) routes() http.Handler {
 	mux := http.NewServeMux()
 	staticSub, _ := fs.Sub(assetsFS, "assets/static")
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSub))))
-	mux.HandleFunc("GET /{$}", a.handleKiosk)
+	mux.HandleFunc("GET /{$}", a.requireKiosk(a.handleKiosk))
 	mux.HandleFunc("GET /logo", a.handleLogo)
 	mux.HandleFunc("GET /sound/{event}", a.handleSound)
-	mux.HandleFunc("POST /submit", a.handleSubmit)
+	mux.HandleFunc("POST /submit", a.requireKiosk(a.handleSubmit))
+	mux.HandleFunc("POST /kiosk-unlock", a.handleKioskUnlock)
 	a.registerAdmin(mux)
 	return mux
 }

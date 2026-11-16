@@ -23,6 +23,7 @@ var allowedSoundExt = map[string]bool{".wav": true, ".mp3": true, ".ogg": true}
 type settingsData struct {
 	SiteName          string
 	Timezone          string
+	KioskAccessCode   string
 	Debounce          string
 	AutoCheckout      bool
 	AutoCheckoutAt    string
@@ -63,6 +64,7 @@ func (a *app) handleSettings(w http.ResponseWriter, r *http.Request) {
 	v.Data = settingsData{
 		SiteName:          a.siteName(),
 		Timezone:          configOr(a.db, cfgTimezone, "UTC"),
+		KioskAccessCode:   a.kioskCode(),
 		Debounce:          configOr(a.db, cfgDebounce, "5"),
 		AutoCheckout:      configOr(a.db, cfgAutoCheckoutEnabled, "0") == "1",
 		AutoCheckoutAt:    configOr(a.db, cfgAutoCheckoutTime, ""),
@@ -99,6 +101,8 @@ func (a *app) handleGeneralSettingsSave(w http.ResponseWriter, r *http.Request) 
 		}
 		_ = setConfig(a.db, cfgTimezone, tz)
 	}
+
+	_ = setConfig(a.db, cfgKioskAccessCode, strings.TrimSpace(r.FormValue("kiosk_access_code")))
 
 	http.Redirect(w, r, "/admin/settings?flash=Settings+saved", http.StatusSeeOther)
 }
